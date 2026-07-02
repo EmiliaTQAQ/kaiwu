@@ -72,7 +72,7 @@ export function SkillLibraryPage({
           <h2>{skillView === 'market' ? '技能库' : '已安装技能'}</h2>
           <p>{skillView === 'market' ? '发现、安装和查看可用于对话的工具能力。' : `管理 ${installedCount} 个已安装技能的启用状态。`}</p>
         </div>
-        <button className="primary-action icon-action" onClick={() => setSkillModal('custom')} type="button">
+        <button className="primary-action library-header-action" onClick={() => setSkillModal('custom')} type="button">
           <Plus size={14} />
           添加自定义技能
         </button>
