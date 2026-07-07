@@ -51,6 +51,19 @@ Inline styles exist in a few generated preview/image sections, but new durable U
 
 ---
 
+## Global Feedback
+
+Use `ToastProvider` and the shared `ShowToast` type for lightweight app feedback such as save, delete, upload, copy, install, and generation-complete messages.
+
+```tsx
+showToast({ message: '文件已上传', variant: 'success' });
+showToast({ message: '上传失败，请稍后重试', variant: 'error' });
+```
+
+Keep destructive confirmations as blocking dialogs when the user must explicitly approve an irreversible action, but do not use `alert()` for non-blocking status feedback. Hooks should receive `showToast` as an option or callback and keep toast types imported from `src/types.ts`, not from feature component paths.
+
+---
+
 ## Icons And Motion
 
 Use existing dependencies:
