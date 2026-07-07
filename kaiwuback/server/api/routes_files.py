@@ -4,7 +4,7 @@ import re
 import shutil
 from binascii import Error as BinasciiError
 from datetime import datetime
-from urllib.parse import quote
+from urllib.parse import quote, unquote, urlparse
 
 from fastapi import Request
 from fastapi.responses import JSONResponse, FileResponse
@@ -153,6 +153,44 @@ def _count_project_images() -> int:
     if not IMG_STORE.exists():
         return 0
     return sum(1 for f in IMG_STORE.iterdir() if f.is_file() and f.suffix.lower() in ('.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp'))
+
+
+LOCAL_IMAGE_HOSTS = {"localhost", "127.0.0.1", "::1"}
+
+
+def _attachment_headers(filename: str) -> dict[str, str]:
+    fallback = "".join(
+        ch if 32 <= ord(ch) < 127 and ch not in {'"', "\\", ";"} else "_"
+        for ch in filename
+    ).strip() or "image.jpg"
+    encoded = quote(filename, safe="")
+    return {
+        "Content-Disposition": (
+            f'attachment; filename="{fallback}"; filename*=UTF-8\'\'{encoded}'
+        )
+    }
+
+
+def _project_image_path_from_url(url: str) -> Path | None:
+    parsed = urlparse(url)
+    is_local_project_image = (
+        parsed.path.startswith("/project-images/")
+        and (not parsed.netloc or parsed.hostname in LOCAL_IMAGE_HOSTS)
+    )
+    if not is_local_project_image:
+        return None
+
+    filename = unquote(parsed.path.removeprefix("/project-images/"))
+    if not filename:
+        return None
+
+    root = IMG_STORE.resolve()
+    image_path = (root / filename).resolve()
+    try:
+        image_path.relative_to(root)
+    except ValueError:
+        return None
+    return image_path
 
 
 def register_file_routes(app):
@@ -397,18 +435,30 @@ def register_file_routes(app):
 
     @app.get("/api/download-image")
     def api_download_image(url: str = ""):
-        import io
         if not url:
             return JSONResponse({"error": "url required"}, status_code=400)
+
+        parsed = urlparse(url)
+        local_path = _project_image_path_from_url(url)
+        if local_path is not None:
+            if not local_path.is_file():
+                return JSONResponse({"error": "image not found"}, status_code=404)
+            return FileResponse(local_path, headers=_attachment_headers(local_path.name))
+        if not parsed.netloc or parsed.hostname in LOCAL_IMAGE_HOSTS:
+            return JSONResponse({"error": "unsupported image url"}, status_code=400)
+
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            return JSONResponse({"error": "unsupported image url"}, status_code=400)
+
         try:
             import requests as req
             resp = req.get(url, timeout=30)
             resp.raise_for_status()
-            filename = url.split('/')[-1].split('?')[0] or 'image.jpg'
+            filename = Path(unquote(parsed.path)).name or 'image.jpg'
             return Response(content=resp.content, media_type=resp.headers.get('content-type', 'image/jpeg'),
-                            headers={"Content-Disposition": f"attachment; filename={filename}"})
+                            headers=_attachment_headers(filename))
         except Exception as e:
-            return JSONResponse({"error": str(e)[:200]}, status_code=500)
+            return JSONResponse({"error": str(e)[:200]}, status_code=502)
 
     # ── 文件上传 API ──
     @app.post("/api/upload-file")
