@@ -72,21 +72,26 @@ When adding an endpoint:
 
 ### 1. Scope / Trigger
 
-- Trigger: any change to generated project images, `GET /api/project-images`, or frontend project image preview fields.
+- Trigger: any change to generated project images, WebP previews, `GET /api/project-images`, or frontend project image preview fields.
 - This is a cross-layer contract because `AgentRuntime` writes image metadata, `routes_files.py` serializes it, and the frontend `ProjectImage` type renders it.
 
 ### 2. Signatures
 
 - `GET /api/project-images` -> `list[ProjectImageSummary]`
+- `GET /project-image-previews/{filename:path}` -> WebP preview bytes or `404`.
 - `save_image_to_library(image_url: str, style: str, metadata: dict[str, Any] | None = None) -> str`
+- `ensure_project_image_webp_preview(image_path: Path) -> Path | None`
 - Sidecar storage: `kaiwuback/project-images/.image-meta.json`, keyed by saved image filename.
+- Preview storage: `kaiwuback/project-image-previews/<original-filename>.webp`.
 
 ### 3. Contracts
 
 `ProjectImageSummary` required response fields:
 
 - `name: string` - actual filename from `IMG_STORE`.
-- `url: string` - local `/project-images/<filename>` URL.
+- `url: string` - display URL. Prefer local `/project-image-previews/<filename>.webp` when a WebP preview exists; otherwise fall back to `/project-images/<filename>`.
+- `original_url: string` - original local `/project-images/<filename>` URL used by download actions.
+- `preview_url: string` - same display URL as `url`; present for explicit consumers.
 - `size: number` - file size from the filesystem.
 - `modified: string` - filesystem modified time formatted as `YYYY-MM-DD HH:mm`.
 
@@ -103,25 +108,33 @@ Optional metadata fields:
 
 Core filesystem fields (`name`, `url`, `size`, `modified`) must win over metadata fields when merging. Metadata is display-only and must not contain API keys, provider tokens, or raw request headers.
 
+For generated PNG/JPG/JPEG files, create WebP previews with Pillow. Do not list preview files as project images, and do not replace or delete originals. SVG/GIF/WebP originals may fall back to original URLs.
+
 ### 4. Validation & Error Matrix
 
 - Missing `.image-meta.json` -> return image entries with required fields only.
 - Malformed `.image-meta.json` -> log a short `[IMG] Metadata read failed` message and return required fields only.
 - Missing metadata for a filename -> return required fields only.
 - Unsupported file suffix in `IMG_STORE` -> skip it.
+- Pillow missing or preview generation fails -> log `[IMG] WebP preview...` and return the original image URL as `url`.
+- Preview route path traversal -> `404 {"error": "not found"}`.
+- Preview URL passed to `/api/download-image` -> resolve back to the original image path when possible.
 - Corrupt metadata that attempts to override `name`, `url`, `size`, or `modified` -> ignore the override by merging filesystem fields last.
 
 ### 5. Good/Base/Bad Cases
 
-- Good: a newly generated image appears with `prompt`, `ratio`, `resolution`, and `source`, so the frontend preview can show generation details.
+- Good: a newly generated PNG appears with a WebP `url`, an original `original_url`, and metadata fields such as `prompt`, `ratio`, `resolution`, and `source`.
 - Base: an older image has no metadata and still previews with filename, time, and size.
+- Base: Pillow is unavailable, so the API returns the original URL for display and download still works.
 - Bad: route code reads metadata once per image or lets metadata override the local file URL.
+- Bad: frontend displays and downloads from the same `url` after `url` has become a WebP preview URL.
 
 ### 6. Tests Required
 
 - Backend syntax: `python -m compileall kaiwuback/server`.
 - Frontend type/build: `Set-Location kaiwu; npm run build` when `ProjectImage` fields or preview UI changes.
 - API smoke: `GET http://localhost:5001/api/project-images` returns `200` and JSON parse succeeds.
+- WebP smoke: create a temporary PNG under `IMG_STORE`, call `ensure_project_image_webp_preview()`, assert the `.webp` file exists, then delete both files.
 - Manual UI smoke: open project library -> 图片库, click an image, confirm the app opens the preview modal instead of a new browser tab.
 
 ### 7. Wrong vs Correct
@@ -131,7 +144,7 @@ Core filesystem fields (`name`, `url`, `size`, `modified`) must win over metadat
 ```python
 images.append({
     "name": f.name,
-    "url": local_url,
+    "url": original_url,
     **metadata,  # metadata can override name/url
 })
 ```
@@ -139,10 +152,14 @@ images.append({
 #### Correct
 
 ```python
+display_url = project_image_display_url(f.name)
+original_url = project_image_original_url(f.name)
 images.append({
     **metadata,
     "name": f.name,
-    "url": local_url,
+    "url": display_url,
+    "original_url": original_url,
+    "preview_url": display_url,
     "size": f.stat().st_size,
     "modified": modified,
 })

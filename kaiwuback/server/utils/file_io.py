@@ -4,12 +4,14 @@ import os, uuid, requests as req
 from pathlib import Path
 from datetime import datetime
 from typing import Any
-from urllib.parse import unquote, urlparse
+from urllib.parse import quote, unquote, urlparse
 
-from server.config import PROJECT_LIB, IMG_STORE
+from server.config import PROJECT_IMAGE_PREVIEW_STORE, PROJECT_LIB, IMG_STORE, public_url
 from server.utils.markdown import markdown_to_html
 
 PROJECT_IMAGE_META = IMG_STORE / ".image-meta.json"
+PROJECT_IMAGE_WEBP_SUFFIXES = {".png", ".jpg", ".jpeg"}
+PROJECT_IMAGE_WEBP_QUALITY = 82
 
 
 def _read_project_image_meta() -> dict[str, dict[str, Any]]:
@@ -80,6 +82,59 @@ def get_project_image_metadata(filename: str) -> dict[str, Any]:
 
 def get_project_image_metadata_map() -> dict[str, dict[str, Any]]:
     return _read_project_image_meta()
+
+
+def project_image_webp_preview_name(original_filename: str) -> str:
+    return f"{original_filename}.webp"
+
+
+def project_image_original_name_from_preview(preview_filename: str) -> str | None:
+    if not preview_filename.endswith(".webp"):
+        return None
+    original_filename = preview_filename[:-5]
+    return original_filename or None
+
+
+def project_image_original_url(filename: str) -> str:
+    return public_url(f"/project-images/{quote(filename, safe='')}")
+
+
+def project_image_display_url(filename: str) -> str:
+    image_path = IMG_STORE / filename
+    preview_path = ensure_project_image_webp_preview(image_path)
+    if preview_path is not None:
+        return public_url(f"/project-image-previews/{quote(preview_path.name, safe='')}")
+    return project_image_original_url(filename)
+
+
+def ensure_project_image_webp_preview(image_path: Path) -> Path | None:
+    """Create or refresh a WebP preview for a project image."""
+    if image_path.suffix.lower() not in PROJECT_IMAGE_WEBP_SUFFIXES:
+        return None
+
+    preview_path = PROJECT_IMAGE_PREVIEW_STORE / project_image_webp_preview_name(image_path.name)
+    try:
+        if preview_path.exists() and preview_path.stat().st_mtime >= image_path.stat().st_mtime:
+            return preview_path
+
+        from PIL import Image, ImageOps
+
+        with Image.open(image_path) as image:
+            preview = ImageOps.exif_transpose(image)
+            if preview.mode not in {"RGB", "RGBA"}:
+                preview = preview.convert("RGBA" if "A" in preview.getbands() else "RGB")
+            preview.save(
+                preview_path,
+                "WEBP",
+                quality=PROJECT_IMAGE_WEBP_QUALITY,
+                method=6,
+            )
+        return preview_path
+    except ImportError as exc:
+        print(f"[IMG] WebP preview unavailable: {str(exc)[:120]}", flush=True)
+    except Exception as exc:
+        print(f"[IMG] WebP preview failed for {image_path.name}: {str(exc)[:120]}", flush=True)
+    return None
 
 
 def _coerce_json_dict(value: Any) -> dict[str, Any]:
@@ -250,6 +305,7 @@ def save_image_to_library(image_url: str, style: str, metadata: dict[str, Any] |
     (PROJECT_LIB / "AI 对话产出").mkdir(parents=True, exist_ok=True)
     (PROJECT_LIB / "图片库" / filename).write_bytes(resp.content)
     (PROJECT_LIB / "AI 对话产出" / filename).write_bytes(resp.content)
+    ensure_project_image_webp_preview(filepath)
     save_project_image_metadata(filename, {"style": style, **(metadata or {})})
     print(f"[IMG] Saved: {filename} (图片库 + AI 对话产出)", flush=True)
     return filename

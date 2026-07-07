@@ -8,11 +8,9 @@ import threading
 import time
 import uuid
 from typing import Any, Iterable
-from urllib.parse import quote
 
 from server.agent.event_store import EventStore
 from server.agent.state_machine import ROUTING, RUNNING, STREAMING, SAVING, COMPLETED, FAILED, CANCELLED
-from server.config import public_url
 from server.intent.recognizer import (
     DEPENDENCIES,
     _session_state,
@@ -33,6 +31,7 @@ from server.utils.common import (
     save_conversation,
     save_image_to_library,
 )
+from server.utils.file_io import project_image_display_url, project_image_original_url
 from server.utils.session import save_session_state as sess_save
 from server.llm_client import call_seedream
 
@@ -414,6 +413,7 @@ class AgentRuntime:
 
                 provider_url = urls[0]
                 display_url = provider_url
+                original_url = provider_url
                 image_style = f"图片生成#{img_i + 1}"
                 try:
                     filename = save_image_to_library(
@@ -429,11 +429,12 @@ class AgentRuntime:
                             "reference_count": len(reference_data_urls),
                         },
                     )
-                    display_url = public_url(f"/project-images/{quote(filename, safe='')}")
+                    display_url = project_image_display_url(filename)
+                    original_url = project_image_original_url(filename)
                 except Exception as exc:
                     print(f"[IMG] Save failed: {exc}", flush=True)
 
-                image = {"style": image_style, "url": display_url, "prompt": message}
+                image = {"style": image_style, "url": display_url, "original_url": original_url, "prompt": message}
                 image_urls.append(image)
                 self.emit(task_id, "image", image)
             except Exception as exc:
@@ -575,10 +576,12 @@ class AgentRuntime:
                         err_msg = next(str(url)[4:] for url in result if str(url).startswith("ERR:"))
                         raise RuntimeError(err_msg)
                     if urls:
+                        display_url = urls[0]
+                        original_url = urls[0]
                         try:
                             from server.utils.common import save_image_to_library
 
-                            save_image_to_library(
+                            filename = save_image_to_library(
                                 urls[0],
                                 style[:4],
                                 {
@@ -589,9 +592,11 @@ class AgentRuntime:
                                     "source": "AI 对话产出",
                                 },
                             )
+                            display_url = project_image_display_url(filename)
+                            original_url = project_image_original_url(filename)
                         except Exception as exc:
                             print(f"[IMG] Save failed: {exc}", flush=True)
-                        image = {"style": f"{style}#{img_i + 1}", "url": urls[0], "prompt": prompt}
+                        image = {"style": f"{style}#{img_i + 1}", "url": display_url, "original_url": original_url, "prompt": prompt}
                         image_urls.append(image)
                         self.emit(task_id, "image", image)
                 except Exception as exc:

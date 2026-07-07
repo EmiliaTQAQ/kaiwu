@@ -3,6 +3,7 @@ import { useEffect, useState, type SyntheticEvent } from 'react';
 
 import { API_BASE_URL } from '../../api/client';
 import type { ProjectImage } from '../../types';
+import { ProjectLazyImage } from './ProjectLazyImage';
 
 type ProjectImagePreviewModalProps = {
   images: ProjectImage[];
@@ -101,7 +102,7 @@ export function ProjectImagePreviewModal({
   }
 
   const openDownload = () => {
-    window.open(imageDownloadUrl(image.url), '_blank', 'noopener,noreferrer');
+    window.open(imageDownloadUrl(image.original_url || image.url), '_blank', 'noopener,noreferrer');
   };
   const handleImageLoad = (event: SyntheticEvent<HTMLImageElement>) => {
     const loadedImage = event.currentTarget;
@@ -177,7 +178,12 @@ export function ProjectImagePreviewModal({
                 aria-label={`查看图片 ${index + 1}`}
                 title={item.style || item.name}
               >
-                <img src={item.url} alt={item.style || item.name} />
+                <ProjectLazyImage
+                  src={item.url}
+                  alt={item.style || item.name}
+                  rootMargin="120px"
+                  eager={index === safeIndex}
+                />
               </button>
             ))}
           </div>

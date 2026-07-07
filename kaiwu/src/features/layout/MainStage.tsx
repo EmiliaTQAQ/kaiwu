@@ -6,6 +6,7 @@ import { directions, modelOptions, settingsSections } from '../../data';
 import { ConversationPanel } from '../chat/ConversationPanel';
 import { SkillLibraryPage } from './SkillLibraryPage';
 import { ProjectImagePreviewModal } from './ProjectImagePreviewModal';
+import { ProjectLazyImage } from './ProjectLazyImage';
 import { BrandHeader } from '../home/BrandHeader';
 import { ChatInput } from '../home/ChatInput';
 import { WorkflowSteps } from '../home/WorkflowSteps';
@@ -522,7 +523,7 @@ export function MainStage(props: MainStageProps) {
                           <div className="project-image-grid">
                             {visibleProjectImages.map((img: ProjectImage, imageIndex: number) => (
                               <button key={img.name} className="project-image-card" onClick={() => setProjectImagePreviewIndex(imageIndex)} type="button">
-                                <img src={img.url} alt={img.name} />
+                                <ProjectLazyImage src={img.url} alt={img.name} />
                                 <span>{img.modified}</span>
                               </button>
                             ))}
