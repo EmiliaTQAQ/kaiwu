@@ -299,6 +299,7 @@ function AppShell() {
     setProjectImages,
     setActivePage,
     setCodingMode,
+    setCodingPreviewUrl,
     showToast,
   });
   const {

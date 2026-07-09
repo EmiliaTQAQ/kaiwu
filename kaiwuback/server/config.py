@@ -21,6 +21,13 @@ def _env_int(name: str, default: int) -> int:
     except ValueError as exc:
         raise ValueError(f"{name} must be an integer") from exc
 
+
+def _env_bool(name: str, default: bool) -> bool:
+    value = os.getenv(name)
+    if value in (None, ""):
+        return default
+    return value.strip().lower() not in ("0", "false", "no", "off")
+
 # ═══════════════════════════════════════
 # DeepSeek 客户端
 # ═══════════════════════════════════════
@@ -45,6 +52,7 @@ SEEDREAM_URL = "https://ark.cn-beijing.volces.com/api/v3/images/generations"
 SEEDREAM_MODEL = "doubao-seedream-5-0-lite-260128"
 
 PUBLIC_BASE_URL = os.getenv("PUBLIC_BASE_URL", "").strip().rstrip("/")
+KAIWU_BYPASS_NODE_PREREQUISITES = _env_bool("KAIWU_BYPASS_NODE_PREREQUISITES", True)
 
 
 def public_url(path: str) -> str:
