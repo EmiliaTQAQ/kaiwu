@@ -268,6 +268,14 @@ def _column_weight(header: str, rows: list[list[str]], index: int, headers: list
     content_weight = _content_length_weight(longest_value, average_value)
     if _is_key_value_table(headers):
         return _clamp_weight(content_weight, 0.54, 0.74) if index == 0 else _clamp_weight(content_weight, 2.75, 3.55)
+    if re.search(r"^(人数|人次|数量)$", key) and longest_value <= 8:
+        return _clamp_weight(content_weight, 0.55, 0.82)
+    if re.search(r"^(来源|依据|依据章节|轮次)$", key) and longest_value <= 12:
+        return _clamp_weight(content_weight, 0.7, 1.0)
+    if re.search(r"^(角色|资产类型|类型|类别|项目|维度|平台|渠道|方式|阶段|状态|固定变动)$", key) and longest_value <= 16:
+        return _clamp_weight(content_weight, 0.75, 1.15)
+    if table_width >= 3 and longest_value <= 12 and average_value <= 8:
+        return _clamp_weight(content_weight, 0.72, 1.08)
     if table_width == 3:
         if index == 0 and re.search(r"^(月|月份|阶段|方式|媒介|渠道|平台|类型|类目)$", key):
             return _clamp_weight(content_weight, 0.78, 1.05)
@@ -360,12 +368,18 @@ def _is_center_aligned_column(header: str, rows: list[list[str]], index: int) ->
     if _is_right_aligned_column(header, rows, index):
         return False
     key = _normalize_header(header)
-    if re.search(r"^(年份|年度|收入来源|数据来源|来源|测算依据|时效限制|依据|备注|说明)$", key):
+    if re.search(r"^(年份|年度|收入来源|数据来源|测算依据|时效限制|备注|说明)$", key):
         return False
     longest_value = _column_longest_value(header, rows, index)
+    values = [_plain_cell(row[index]) if index < len(row) else "" for row in rows]
+    values = [value for value in values if value]
+    average_value = sum(len(value) for value in values) / len(values) if values else 0
+    if re.search(r"^(序号|编号|排名|id|no|痛点编号|类目|类别|项目|维度|方式|渠道|平台|媒介|阶段|类型|月份|月|人数|人次|数量|来源|依据|依据章节|轮次|角色|资产类型|固定变动)$", key, re.I):
+        return longest_value <= 18
     return bool(
-        re.search(r"^(序号|编号|排名|id|no|痛点编号|类目|类别|项目|维度|方式|渠道|平台|媒介|阶段|类型|月份|月)$", key, re.I)
-        and longest_value <= 14
+        rows
+        and longest_value <= 18
+        and average_value <= 12
     )
 
 

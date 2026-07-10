@@ -28,11 +28,12 @@
 .md-table {
   width: 100%;
   max-width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
   table-layout: fixed;
-  margin: 10px 0 14px;
-  font-size: 12px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  margin: 14px 0 18px;
+  font-size: 13px;
+  border: 0;
   border-radius: 8px;
   overflow: hidden;
 }
@@ -68,47 +69,47 @@
 }
 
 .md-table-kv .md-td {
-  padding-top: 8px;
-  padding-bottom: 8px;
+  padding-top: 11px;
+  padding-bottom: 11px;
 }
 
 .md-table tr:first-child .md-td {
   background: #f8fafc;
-  font-weight: 700;
+  font-weight: 800;
   color: #0f172a;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding: 12px 14px;
+  line-height: 1.35;
 }
 
 .md-table tr:first-child .md-td.md-td-right {
-  padding-right: 12px;
+  padding-right: 14px;
 }
 
 .md-table .md-td:first-child {
   color: #334155;
+  font-weight: 650;
   white-space: normal;
 }
 
 .md-td.md-td-right {
   text-align: right;
-  padding-right: 12px;
+  padding-right: 14px;
 }
 
 .md-td.md-td-center {
   text-align: center;
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-left: 12px;
+  padding-right: 12px;
 }
 
-td.md-td.md-td-label {
+.md-td.md-td-label {
   text-align: center;
   font-weight: 700;
   color: #475569;
-  background: rgba(248, 250, 252, 0.55);
 }
 
 .md-td.md-td-rich {
-  line-height: 1.58;
+  line-height: 1.68;
 }
 
 .md-td.md-td-compact {
@@ -116,22 +117,21 @@ td.md-td.md-td-label {
 }
 
 .md-td {
-  padding: 6px 8px;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
-  line-height: 1.5;
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.07);
+  line-height: 1.62;
   vertical-align: top;
   text-align: left;
   overflow-wrap: anywhere;
   word-break: break-word;
 }
 
-.md-table-kv tr:first-child th.md-td,
-.md-table-kv tr:first-child th.md-td.md-td-right,
-.md-table-kv tr:first-child th.md-td.md-td-center,
-.md-table-kv tr:first-child th.md-td.md-td-label {
-  text-align: center;
-  padding-left: 8px;
-  padding-right: 8px;
+.md-table tr:first-child th.md-td,
+.md-table tr:first-child th.md-td.md-td-right,
+.md-table tr:first-child th.md-td.md-td-center,
+.md-table tr:first-child th.md-td.md-td-label {
+  padding-left: 14px;
+  padding-right: 14px;
 }
 
 .md-table tr:last-child .md-td {

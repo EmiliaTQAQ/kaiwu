@@ -201,6 +201,12 @@ function tableColumnWeight(header: string, rows: MarkdownTableRow[], index: numb
   const averageValue = values.length > 0 ? values.reduce((sum, value) => sum + value.length, 0) / values.length : 0;
   const contentWeight = contentLengthWeight(longestValue, averageValue);
   if (isKeyValueTable(headers)) return index === 0 ? clampWeight(contentWeight, 0.54, 0.74) : clampWeight(contentWeight, 2.75, 3.55);
+  if (/^(人数|人次|数量)$/.test(key) && longestValue <= 8) return clampWeight(contentWeight, 0.55, 0.82);
+  if (/^(来源|依据|依据章节|轮次)$/.test(key) && longestValue <= 12) return clampWeight(contentWeight, 0.7, 1.0);
+  if (/^(角色|资产类型|类型|类别|项目|维度|平台|渠道|方式|阶段|状态|固定变动)$/.test(key) && longestValue <= 16) {
+    return clampWeight(contentWeight, 0.75, 1.15);
+  }
+  if (tableWidth >= 3 && longestValue <= 12 && averageValue <= 8) return clampWeight(contentWeight, 0.72, 1.08);
   if (tableWidth === 3) {
     if (index === 0 && /^(月|月份|阶段|方式|媒介|渠道|平台|类型|类目)$/.test(key)) return clampWeight(contentWeight, 0.78, 1.05);
     if (index === 1 && /^(目标|内容形式|故事类型|维度|说明)$/.test(key)) return clampWeight(contentWeight, 1.35, 2.35);
@@ -264,9 +270,14 @@ function isCompactTwoColumnComparisonTable(headers: MarkdownTableRow, rows: Mark
 function isCenterAlignedTableColumn(header: string, rows: MarkdownTableRow[], index: number) {
   if (isRightAlignedTableColumn(header, rows, index)) return false;
   const key = headerKey(header);
-  if (/^(年份|年度|收入来源|数据来源|来源|测算依据|时效限制|依据|备注|说明)$/.test(key)) return false;
+  if (/^(年份|年度|收入来源|数据来源|测算依据|时效限制|备注|说明)$/.test(key)) return false;
   const longestValue = tableColumnLongestValue(header, rows, index);
-  return /^(序号|编号|排名|id|no|痛点编号|类目|类别|项目|维度|方式|渠道|平台|媒介|阶段|类型|月份|月)$/.test(key) && longestValue <= 14;
+  const values = rows.map((row) => plainCell(cellAt(row, index))).filter(Boolean);
+  const averageValue = values.length > 0 ? values.reduce((sum, value) => sum + value.length, 0) / values.length : 0;
+  if (/^(序号|编号|排名|id|no|痛点编号|类目|类别|项目|维度|方式|渠道|平台|媒介|阶段|类型|月份|月|人数|人次|数量|来源|依据|依据章节|轮次|角色|资产类型|固定变动)$/.test(key)) {
+    return longestValue <= 18;
+  }
+  return rows.length > 0 && longestValue <= 18 && averageValue <= 12;
 }
 
 function tableCellClassName(headers: MarkdownTableRow, bodyRows: MarkdownTableRow[], index: number) {

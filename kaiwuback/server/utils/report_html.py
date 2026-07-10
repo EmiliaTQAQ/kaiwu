@@ -230,8 +230,8 @@ table{
   font-size:14px;
   border-radius:var(--radius);
   overflow:hidden;
-  border:1px solid var(--border);
-  box-shadow:0 1px 3px rgba(15,23,42,.04);
+  border:0;
+  box-shadow:none;
 }
 table + table{margin-top:14px}
 table.table-cols-2,
@@ -240,41 +240,45 @@ table.table-cols-4{width:100%}
 table.table-kv th,
 table.table-kv td{padding-top:14px;padding-bottom:14px}
 thead th{
-  background:var(--primary);
-  color:#fff;
+  background:#f8fafc;
+  color:#0f172a;
   padding:14px 16px;
   text-align:left;
-  font-weight:600;
-  font-size:12px;
-  letter-spacing:.5px;
-  text-transform:uppercase;
+  font-weight:800;
+  font-size:14px;
+  letter-spacing:0;
+  text-transform:none;
   white-space:normal;
   word-break:break-word;
   overflow-wrap:anywhere;
+  line-height:1.35;
 }
-table.table-kv thead th{text-align:center}
 tbody td{
-  padding:12px 16px;
-  border-bottom:1px solid var(--border-light);
+  padding:14px 16px;
+  border-bottom:1px solid rgba(15,23,42,.07);
   background:var(--card-bg);
   color:var(--text);
   vertical-align:top;
   word-break:break-word;
   overflow-wrap:anywhere;
+  line-height:1.68;
 }
-tbody tr:nth-child(even) td{background:#f8fafc}
-tbody tr:hover td{background:#fef3c7;transition:background .15s ease}
+tbody tr:nth-child(even) td{background:var(--card-bg)}
+tbody tr:hover td{background:var(--card-bg)}
 tbody tr:last-child td{border-bottom:none}
-tbody td:first-child{font-weight:600;color:var(--primary)}
+tbody td:first-child{font-weight:650;color:var(--text-light)}
+th.cell-right,
 td.cell-right{
   text-align:right;
   padding-right:18px;
 }
+th.cell-center,
 td.cell-center{
   text-align:center;
   padding-left:16px;
   padding-right:16px;
 }
+th.cell-label,
 td.cell-label{
   text-align:center;
   font-weight:700;
