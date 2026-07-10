@@ -337,6 +337,62 @@ Use the local capability boundaries before adding new helpers:
 
 `server/utils/common.py` is a compatibility re-export layer. Do not add new implementation there; add implementation to the real utility module and only re-export if old imports require it.
 
+### Scenario: Markdown And Report HTML Table Rendering
+
+#### 1. Scope / Trigger
+
+- Trigger: any backend change to `server/utils/markdown.py` or `server/utils/report_html.py` that affects AI Markdown tables or generated report HTML.
+- Keep this synchronized with frontend `renderMarkdown()` because users see the same AI content in chat and exported reports.
+
+#### 2. Signatures
+
+- `markdown_to_html(text: str) -> str` converts AI Markdown into report body HTML.
+- Table HTML should include `class="table-cols-<n>"`, a `colgroup`, and semantic cell classes such as `cell-right`, `cell-rich`, and `cell-compact`.
+
+#### 3. Contracts
+
+- Width is semantic plus content-length based, not a fixed equal split for every column.
+- Right alignment is semantic only: numeric/year/market-size/source-short columns may align right; the final column is not right-aligned by default.
+- Header/body row normalization must preserve data by padding short rows and merging overflow cells into the last column.
+- Story-output tables with script/copy/private-domain/platform columns render as accordion cards so long generated copy remains readable.
+
+#### 4. Validation & Error Matrix
+
+- Empty table block -> return an empty string.
+- Separator-only table block -> return an empty string.
+- Missing cells -> pad with empty cells.
+- Extra cells -> merge into the last cell.
+- Developer-only node hints or terminal markers -> hide with `dev-ghost`/`dev-ghost-line`, not visible report text.
+
+#### 5. Good/Base/Bad Cases
+
+- Good: exported market tables match frontend live-chat proportions for `市场规模`, `核心特征`, and `机会点`.
+- Base: older simple tables still render with standard `<thead>`/`<tbody>` and readable cells.
+- Bad: updating only frontend table weights while backend report export keeps equal-width or last-column-right behavior.
+
+#### 6. Tests Required
+
+- Run `python -m compileall kaiwuback/server`.
+- If frontend rendering changed too, run `npm run build` from `kaiwu/`.
+- Smoke `markdown_to_html()` with a 4-column market table and assert output contains `<colgroup>`, `table-cols-4`, and semantic right-align classes only where expected.
+
+#### 7. Wrong vs Correct
+
+Wrong:
+
+```python
+html.append('<tr>' + ''.join(f'<td>{_cell_html(c)}</td>' for c in row) + '</tr>')
+```
+
+Correct:
+
+```python
+html.append('<tr>' + ''.join(
+    f'<td class="{_cell_class(headers, body_rows, idx)}">{_cell_html(c)}</td>'
+    for idx, c in enumerate(row)
+) + '</tr>')
+```
+
 ---
 
 ## Naming Conventions
