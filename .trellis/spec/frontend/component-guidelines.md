@@ -119,6 +119,11 @@ For task image/SVG events, use the `images` and `svgLogos` fields on `AgentMessa
 - Markdown tables must emit a `colgroup` with percentage widths derived from header semantics and body content length.
 - Short/numeric columns such as `序号`, `年份`, `同比增速`, `市占率`, and `市场规模` should occupy less width than descriptive columns such as `核心特征`, `机会点`, `解决方案`, `痛点`, `说明`, `文案`, and `脚本`.
 - Cells default to left alignment. Apply right alignment only via semantic classes for numeric/compact columns; never right-align the final column just because it is last.
+- Table headers follow the same semantic alignment as their body column: left for descriptive/year/source fields, right for numeric/percentage fields, and centered only for compact categorical/comparison columns.
+- Short categorical body columns such as `类目`, `维度`, `项目`, and `方式` may center-align when their values are compact; long descriptive and source/label fields stay left-aligned.
+- Two-column compact comparison tables such as `竞争者 / 市占率(估)` center-align both body columns so short values do not drift to opposite table edges.
+- First-column labels, year columns (`年份`/`年度`), and source/label fields such as `收入来源` and `数据来源` stay left-aligned even when their content is short.
+- 2/3/4-column tables should fill the message content width; avoid shrinking short tables to a partial-width block.
 - Rows with too many cells should merge overflow cells into the last column instead of dropping content.
 - Keep frontend live chat and backend report export width/alignment rules materially consistent.
 
@@ -131,8 +136,12 @@ For task image/SVG events, use the `images` and `svgLogos` fields on `AgentMessa
 
 #### 5. Good/Base/Bad Cases
 
-- Good: `| 细分市场 | 市场规模（年份/口径） | 核心特征 | 机会点 |` gives wider `核心特征/机会点` columns and right-aligns only the market-size column.
+- Good: `| 年份 | 市场规模（年份/口径） | 同比增速 | 数据来源 |` keeps `年份` and `数据来源` left-aligned while right-aligning only the market-size and growth columns.
 - Base: a two-column `维度/说明` table gives the label column compact width and the explanation column most width.
+- Base: table headers such as `年份` and `预测增速` sit above their own data because they use the same left/right alignment as body cells.
+- Base: compact table headers such as `类目` and their compact body values can center-align together.
+- Base: a two-column `竞争者/市占率(估)` table keeps competitor names and percentages centered under their headers rather than pinned to the left and right edges.
+- Base: a two-column `方式/节奏` table still spans the full message width, not a half-width block.
 - Bad: CSS such as `.md-table td:last-child { text-align: right; }`, because source/description/opportunity columns become hard to read.
 
 #### 6. Tests Required

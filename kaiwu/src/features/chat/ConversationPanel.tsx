@@ -9,6 +9,7 @@ import { renderMarkdown } from '../../utils';
 import type { AgentMessage } from '../../hooks/agentEventReducer';
 import type { SendMessageOptions } from '../../hooks/useConversationTask';
 import type { ImageReferenceInput } from '../../api/tasks';
+import { ReportResultCard } from './ReportResultCard';
 import '../../styles/modals/modal-base.css';
 import '../../styles/conversation/conversation-shell.css';
 import '../../styles/conversation/markdown-content.css';
@@ -216,7 +217,6 @@ export function ConversationPanel({
 }: ConversationPanelProps) {
   const [referenceImages, setReferenceImages] = useState<ReferenceImagePreview[]>([]);
   const [previewImage, setPreviewImage] = useState<GeneratedImagePreview | null>(null);
-  const [actionableNodeIds, setActionableNodeIds] = useState<Set<string>>(new Set());
   const [actionableMessageIndices, setActionableMessageIndices] = useState<Map<string, number>>(new Map());
 
   useEffect(() => () => {
@@ -226,27 +226,27 @@ export function ConversationPanel({
   }, [referenceImages]);
 
   useEffect(() => {
-    if (isLoading || messages.length === 0 || !NODE_ACTIONS[activeNodeId]) return;
+    if (isLoading || messages.length === 0) return;
 
     const lastAiIndex = [...messages].reverse().findIndex((message) => message.role === 'ai');
     if (lastAiIndex < 0) return;
 
     const messageIndex = messages.length - 1 - lastAiIndex;
-    setActionableNodeIds((previous) => {
-      const next = new Set(previous);
-      next.add(activeNodeId);
-      return next;
-    });
+    const lastAiMessage = messages[messageIndex];
+    if (!lastAiMessage.content.trim() || lastAiMessage.reportCards?.length) return;
+
+    const completedNodeId = lastAiMessage.nodeId;
+    if (!completedNodeId || !NODE_ACTIONS[completedNodeId]) return;
+
     setActionableMessageIndices((previous) => {
       const next = new Map(previous);
-      next.set(activeNodeId, messageIndex);
+      next.set(completedNodeId, messageIndex);
       return next;
     });
-  }, [activeNodeId, isLoading, messages]);
+  }, [isLoading, messages]);
 
   useEffect(() => {
     if (messages.length > 0) return;
-    setActionableNodeIds(new Set());
     setActionableMessageIndices(new Map());
   }, [messages.length]);
 
@@ -355,14 +355,27 @@ export function ConversationPanel({
           )}
         </AnimatePresence>
         <AnimatePresence>
-          {messages.map((message, messageIndex) => (
-            <motion.div
-              key={messageIndex}
-              initial={{ opacity: 0, y: 16, scale: 0.97 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
-              className={message.role === 'user' ? 'doubao-message doubao-user' : 'doubao-message doubao-ai'}
-            >
+          {messages.map((message, messageIndex) => {
+            const actionNodeId = message.nodeId;
+            const nodeAction = actionNodeId ? NODE_ACTIONS[actionNodeId] : undefined;
+            const shouldShowNodeAction = Boolean(
+              message.role === 'ai' &&
+              !isLoading &&
+              !message.reportCards?.length &&
+              message.content.trim().length > 0 &&
+              actionNodeId &&
+              nodeAction &&
+              messageIndex === actionableMessageIndices.get(actionNodeId),
+            );
+
+            return (
+              <motion.div
+                key={messageIndex}
+                initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] }}
+                className={message.role === 'user' ? 'doubao-message doubao-user' : 'doubao-message doubao-ai'}
+              >
               <div className="doubao-message-inner">
                 {message.role === 'ai' && !isImageMode && (
                   <motion.div
@@ -375,8 +388,10 @@ export function ConversationPanel({
                   </motion.div>
                 )}
 
-                <div className={`doubao-bubble ${message.role === 'user' ? 'doubao-bubble-user' : 'doubao-bubble-ai'}`}>
-                  {message.role === 'ai' && message.content === '' && isLoading ? (
+                <div
+                  className={`doubao-bubble ${message.role === 'user' ? 'doubao-bubble-user' : 'doubao-bubble-ai'}${message.role === 'ai' && message.reportCards?.length ? ' doubao-bubble-report' : ''}`}
+                >
+                  {message.role === 'ai' && message.content === '' && isLoading && !message.reportCards?.length ? (
                     <div className="doubao-node-progress">
                       {nodeStatus && nodeStatus.nodeName ? (
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -443,43 +458,44 @@ export function ConversationPanel({
                       dangerouslySetInnerHTML={{ __html: renderMarkdown(message.images?.length ? stripRenderedMarkdownImages(message.content) : message.content) }}
                     />
                   )}
-                  {message.role === 'ai' &&
-                    [...actionableNodeIds]
-                      .filter((nodeId) => NODE_ACTIONS[nodeId] && messageIndex === actionableMessageIndices.get(nodeId))
-                      .map((nodeId) => {
-                        const action = NODE_ACTIONS[nodeId];
-                        return (
-                          <button
-                            key={nodeId}
-                            className="node-action-card"
-                            onClick={() => runPrompt(action.prompt, null, { clearSuggested: false })}
-                            type="button"
-                            style={{
-                              marginTop: 12,
-                              padding: '10px 14px',
-                              borderRadius: 8,
-                              background: 'var(--surface)',
-                              border: '1px solid var(--border)',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 8,
-                              transition: 'background 0.15s',
-                              width: '100%',
-                            }}
-                            onMouseEnter={(event) => {
-                              event.currentTarget.style.background = 'var(--border)';
-                            }}
-                            onMouseLeave={(event) => {
-                              event.currentTarget.style.background = 'var(--surface)';
-                            }}
-                          >
-                            <span style={{ fontSize: 16, flexShrink: 0 }}>{action.label.slice(0, 2)}</span>
-                            <span style={{ fontSize: 13, color: 'var(--text-primary)', flex: 1 }}>{action.label.slice(3)}</span>
-                            <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>→</span>
-                          </button>
-                        );
-                      })}
+                  {message.role === 'ai' && message.reportCards && message.reportCards.length > 0 && (
+                    <div className="report-result-card-list">
+                      {message.reportCards.map((card, cardIndex) => (
+                        <ReportResultCard key={`${card.url || card.fileName}-${cardIndex}`} card={card} />
+                      ))}
+                    </div>
+                  )}
+                  {shouldShowNodeAction && nodeAction && (
+                    <button
+                      key={actionNodeId}
+                      className="node-action-card"
+                      onClick={() => runPrompt(nodeAction.prompt, null, { clearSuggested: false })}
+                      type="button"
+                      style={{
+                        marginTop: 12,
+                        padding: '10px 14px',
+                        borderRadius: 8,
+                        background: 'var(--surface)',
+                        border: '1px solid var(--border)',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        transition: 'background 0.15s',
+                        width: '100%',
+                      }}
+                      onMouseEnter={(event) => {
+                        event.currentTarget.style.background = 'var(--border)';
+                      }}
+                      onMouseLeave={(event) => {
+                        event.currentTarget.style.background = 'var(--surface)';
+                      }}
+                    >
+                      <span style={{ fontSize: 16, flexShrink: 0 }}>{nodeAction.label.slice(0, 2)}</span>
+                      <span style={{ fontSize: 13, color: 'var(--text-primary)', flex: 1 }}>{nodeAction.label.slice(3)}</span>
+                      <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>→</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -572,8 +588,9 @@ export function ConversationPanel({
                   </button>
                 </motion.div>
               )}
-            </motion.div>
-          ))}
+              </motion.div>
+            );
+          })}
         </AnimatePresence>
       </div>
 

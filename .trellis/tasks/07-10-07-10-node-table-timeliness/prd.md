@@ -36,6 +36,11 @@
 * `npm run build` passed in `kaiwu/`.
 * Backend Markdown table smoke confirmed `colgroup`/`table-cols-4` output and semantic right alignment only for market-size columns.
 * `current_date_cn()` returned `2026年7月10日`, and node1 currentness guard generated 2022-2026 actual-year guidance plus 2027-2028 prediction guidance.
+* Follow-up screenshot pass: adjusted `年份`/`收入来源` columns to stay left-aligned and changed 2/3/4-column table CSS to fill the content width, matching the wider “发布节奏” table behavior.
+* Follow-up header pass: centered table headers within their computed columns while preserving body-cell semantic alignment.
+* Follow-up body pass: compact categorical body columns such as `类目` can center-align under centered headers, while long explanatory cells stay left-aligned.
+* Follow-up compact comparison pass: 2-column short comparison tables such as `竞争者/市占率(估)` center-align both body columns to avoid left/right edge drift.
+* Follow-up semantic header pass: table headers now follow their body column alignment, so `年份` stays above year values and `预测增速`/percentage headers align with their numeric data.
 
 ## Definition of Done
 

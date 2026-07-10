@@ -204,6 +204,7 @@ export function useConversationTask(options: UseConversationTaskOptions) {
       aiContent: '',
       images: [],
       svgLogos: [],
+      reportCards: [],
       messages: latestMessages,
       conversationId: options.convIdRef.current,
       conversationTitle: nextConversationTitle,

@@ -1,5 +1,5 @@
-import { type CSSProperties, useEffect, useRef, useState } from 'react';
-import { Box, ChevronDown, ChevronLeft, ChevronRight, GalleryHorizontalEnd, X } from 'lucide-react';
+import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowUpRight, Box, ChevronDown, ChevronLeft, ChevronRight, FileText, GalleryHorizontalEnd, HelpCircle, X } from 'lucide-react';
 import type { Direction, ShowToast, SkillLibraryItem } from '../../types';
 import { ChatInput, type StartupSkillSelection } from './ChatInput';
 import '../../styles/home/home-experience.css';
@@ -7,9 +7,11 @@ import '../../styles/home/home-experience.css';
 type HomeSkillCard = StartupSkillSelection & {
   id: string;
   index: string;
-  body: string;
+  skill: SkillLibraryItem;
+  titleLines: string[];
   toneClass: string;
   rotationClass: string;
+  titleSize: string;
 };
 
 type HomeCase = {
@@ -19,118 +21,114 @@ type HomeCase = {
   body: string;
   tag: string;
   image: string;
+  brandName?: string;
+  reports?: HomeCaseReport[];
 };
 
-const HOME_SKILL_CARDS: HomeSkillCard[] = [
-  {
-    id: 'industry-scan',
-    index: '01',
-    label: 'INSIGHT',
-    title: '行业扫描',
-    description: '市场趋势 / 机会缺口 / 初步判断',
-    body: '输入行业和目标市场，快速形成可验证的机会判断。',
-    prompt: '输入行业和目标市场，开物会帮你快速判断趋势、缺口和机会。',
-    color: '#2563eb',
-    toneClass: 'tone-blue',
-    rotationClass: 'tilt-left-strong',
-  },
-  {
-    id: 'user-profile',
-    index: '02',
-    label: 'USER',
-    title: '用户画像',
-    description: '目标用户 / 使用场景 / 关键痛点',
-    body: '输入目标人群和使用场景，拆出用户画像、痛点和触发因素。',
-    prompt: '输入目标人群和使用场景，开物会帮你拆出画像、痛点和触发因素。',
-    color: '#7c3aed',
-    toneClass: 'tone-violet',
-    rotationClass: 'tilt-right',
-  },
-  {
-    id: 'brand-positioning',
-    index: '03',
-    label: 'BRAND',
-    title: '品牌定位',
-    description: '一句话定位 / 差异化 / 记忆点',
-    body: '输入创业方向、目标用户和差异点，生成一句话定位。',
-    prompt: '输入创业方向、目标用户和差异点，开物会帮你生成一句话定位。',
-    color: '#14b8a6',
-    toneClass: 'tone-teal',
-    rotationClass: 'tilt-left',
-  },
-  {
-    id: 'business-model',
-    index: '04',
-    label: 'MODEL',
-    title: '商业模式',
-    description: '收入结构 / 定价假设 / 成本逻辑',
-    body: '输入产品、客户和收费方式，推演收入结构与成本边界。',
-    prompt: '输入产品、客户和收费方式，开物会帮你推演商业模式。',
-    color: '#2563eb',
-    toneClass: 'tone-blue',
-    rotationClass: 'tilt-right-strong',
-  },
-  {
-    id: 'mvp-definition',
-    index: '05',
-    label: 'PRODUCT',
-    title: 'MVP 定义',
-    description: '核心功能 / 验证假设 / 优先级',
-    body: '输入产品目标和核心场景，把想法压缩为第一版 MVP。',
-    prompt: '输入产品目标和核心场景，开物会帮你定义第一版 MVP。',
-    color: '#7c3aed',
-    toneClass: 'tone-violet',
-    rotationClass: 'tilt-left',
-  },
-  {
-    id: 'action-route',
-    index: '06',
-    label: 'ACTION',
-    title: '执行路线',
-    description: '阶段动作 / 资源配置 / 下一步',
-    body: '输入资源、周期和渠道，规划 30/60/90 天执行路线。',
-    prompt: '输入资源、周期和渠道，开物会帮你规划执行路线。',
-    color: '#14b8a6',
-    toneClass: 'tone-teal',
-    rotationClass: 'tilt-right-strong',
-  },
-  {
-    id: 'competitor-analysis',
-    index: '07',
-    label: 'COMPETE',
-    title: '竞品分析',
-    description: '对标对象 / 差异机会 / 避坑策略',
-    body: '输入竞品名称或行业关键词，整理可参考与可避开的竞争策略。',
-    prompt: '输入竞品或行业关键词，开物会帮你整理竞争策略。',
-    color: '#2563eb',
-    toneClass: 'tone-blue',
-    rotationClass: 'tilt-left-strong',
-  },
-  {
-    id: 'launch-plan',
-    index: '08',
-    label: 'LAUNCH',
-    title: '首发推广',
-    description: '内容节奏 / 渠道组合 / 转化动作',
-    body: '输入产品方向和预算，生成首发内容、活动节奏和渠道组合。',
-    prompt: '输入产品方向和预算，开物会帮你设计首发推广节奏。',
-    color: '#7c3aed',
-    toneClass: 'tone-violet',
-    rotationClass: 'tilt-right',
-  },
-  {
-    id: 'project-deck',
-    index: '09',
-    label: 'DECK',
-    title: '计划书',
-    description: '项目摘要 / 核心亮点 / 展示结构',
-    body: '输入你已有的资料或想法，整理成一页可展示的项目计划书。',
-    prompt: '输入已有资料或想法，开物会帮你整理项目计划书。',
-    color: '#14b8a6',
-    toneClass: 'tone-teal',
-    rotationClass: 'tilt-left',
-  },
-];
+type HomeCaseReport = {
+  stage: string;
+  title: string;
+  summary: string;
+  href: string;
+};
+
+const HOME_CARD_ROTATION_CLASSES = ['tilt-left-strong', 'tilt-right', 'tilt-left', 'tilt-right-strong'] as const;
+
+const HOME_CARD_TONES: Record<string, { toneClass: string; color: string }> = {
+  blue: { toneClass: 'tone-blue', color: '#2563eb' },
+  indigo: { toneClass: 'tone-indigo', color: '#4f46e5' },
+  green: { toneClass: 'tone-green', color: '#16a34a' },
+  purple: { toneClass: 'tone-violet', color: '#7c3aed' },
+  amber: { toneClass: 'tone-amber', color: '#d97706' },
+  rose: { toneClass: 'tone-rose', color: '#e11d48' },
+  cyan: { toneClass: 'tone-cyan', color: '#0891b2' },
+  pink: { toneClass: 'tone-pink', color: '#db2777' },
+  slate: { toneClass: 'tone-slate', color: '#475569' },
+  orange: { toneClass: 'tone-orange', color: '#ea580c' },
+  teal: { toneClass: 'tone-teal', color: '#14b8a6' },
+  lime: { toneClass: 'tone-lime', color: '#65a30d' },
+};
+
+const HOME_CARD_FALLBACK_TONES = [
+  HOME_CARD_TONES.blue,
+  HOME_CARD_TONES.indigo,
+  HOME_CARD_TONES.teal,
+  HOME_CARD_TONES.rose,
+  HOME_CARD_TONES.amber,
+  HOME_CARD_TONES.cyan,
+] as const;
+
+const HOME_CARD_TITLE_LINES: Record<string, string[]> = {
+  '发售人群针对坐标轴理论': ['发售人群针对', '坐标轴理论'],
+  '最小MVP从0-1': ['最小 MVP', '从 0-1'],
+  '网页采集助手': ['网页采集助手'],
+  '会议纪要整理': ['会议纪要', '整理'],
+  '数据看板摘要': ['数据看板', '摘要'],
+  '原型说明生成': ['原型说明', '生成'],
+};
+
+function getTitleVisualLength(text: string) {
+  return Array.from(text.trim()).reduce((total, char) => (
+    /[A-Za-z0-9-]/.test(char) ? total + 0.62 : total + 1
+  ), 0);
+}
+
+function splitHomeCardTitle(name: string) {
+  const title = name.trim();
+  const override = HOME_CARD_TITLE_LINES[title];
+  if (override) return override;
+
+  const chars = Array.from(title);
+  const length = getTitleVisualLength(title);
+  if (length <= 6.4) return [title];
+  if (length <= 10) {
+    const splitAt = Math.ceil(chars.length / 2);
+    return [chars.slice(0, splitAt).join(''), chars.slice(splitAt).join('')];
+  }
+
+  const lines: string[] = [];
+  let current = '';
+  chars.forEach((char) => {
+    const next = `${current}${char}`;
+    if (current && getTitleVisualLength(next) > 6.4 && lines.length < 2) {
+      lines.push(current);
+      current = char;
+      return;
+    }
+    current = next;
+  });
+  if (current) lines.push(current);
+  return lines.slice(0, 3);
+}
+
+function getHomeCardTitleSize(lines: string[]) {
+  const maxLength = Math.max(...lines.map(getTitleVisualLength));
+  if (maxLength >= 7) return '18px';
+  if (maxLength >= 6) return '19px';
+  if (lines.length >= 3) return '18px';
+  if (lines.length >= 2) return '21px';
+  return '25px';
+}
+
+function buildHomeSkillCard(skill: SkillLibraryItem, index: number): HomeSkillCard {
+  const tone = (skill.tone && HOME_CARD_TONES[skill.tone]) || HOME_CARD_FALLBACK_TONES[index % HOME_CARD_FALLBACK_TONES.length];
+  const label = skill.category || (skill.source === 'external' ? '技能包' : 'SKILL');
+  const titleLines = splitHomeCardTitle(skill.name);
+  return {
+    id: skill.id,
+    index: String(index + 1).padStart(2, '0'),
+    skill,
+    label,
+    title: skill.name,
+    titleLines,
+    description: skill.description || '打开详情查看技能说明',
+    prompt: `请结合「${skill.name}」技能，帮我处理下面这个创业问题：`,
+    color: tone.color,
+    toneClass: tone.toneClass,
+    rotationClass: HOME_CARD_ROTATION_CLASSES[index % HOME_CARD_ROTATION_CLASSES.length],
+    titleSize: getHomeCardTitleSize(titleLines),
+  };
+}
 
 const HOME_CASES: HomeCase[] = [
   {
@@ -140,6 +138,39 @@ const HOME_CASES: HomeCase[] = [
     body: '从情绪消费切入，构建宠物纪念饰品的定位、产品线和内容种草路径。',
     tag: '情绪消费',
     image: '/home-cases/case-pet-silver.jpg',
+    brandName: '凝时',
+    reports: [
+      {
+        stage: '01 市场调研',
+        title: '宠物银饰情感定制赛道调研',
+        summary: '判断宠物纪念银饰的成长期机会，明确"故事定制"的市场入口。',
+        href: '/home-case-reports/pet-silver/market-research.html',
+      },
+      {
+        stage: '02 商业方案',
+        title: '凝时商业模式计划书',
+        summary: '沉淀品牌定位、定价策略、盈利模型和可落地的商业闭环。',
+        href: '/home-case-reports/pet-silver/business-plan.html',
+      },
+      {
+        stage: '03 产品落地',
+        title: '凝时产品落地手册',
+        summary: '拆出 3 个 SKU、成本核算、定价和 4 周启动验证方案。',
+        href: '/home-case-reports/pet-silver/product-handbook.html',
+      },
+      {
+        stage: '04 营销方案',
+        title: '凝时内容营销方案',
+        summary: '围绕 5A 漏斗、故事矩阵和平台传播，规划内容营销打法。',
+        href: '/home-case-reports/pet-silver/marketing-plan.html',
+      },
+      {
+        stage: '05 内容体系',
+        title: '凝时内容营销体系',
+        summary: '输出 26 条可连续发布的故事库、8 周发布节奏和五媒介分配。',
+        href: '/home-case-reports/pet-silver/content-system.html',
+      },
+    ],
   },
   {
     id: 'real-estate',
@@ -148,6 +179,39 @@ const HOME_CASES: HomeCase[] = [
     body: '围绕本地房源、客户信任和私域复购，设计顾问型中介品牌方案。',
     tag: '本地服务',
     image: '/home-cases/case-real-estate.jpg',
+    brandName: '合租侠',
+    reports: [
+      {
+        stage: '01 市场调研',
+        title: '商业地产复合赛道调研',
+        summary: '判断办公+商业复合空间的需求、竞品和机会，明确案例的市场入口。',
+        href: '/home-case-reports/real-estate/market-research.html',
+      },
+      {
+        stage: '02 商业方案',
+        title: '合租侠商业模式计划书',
+        summary: '沉淀品牌定位、盈利模型、服务路径和可落地的商业闭环。',
+        href: '/home-case-reports/real-estate/business-plan.html',
+      },
+      {
+        stage: '03 产品落地',
+        title: '合租侠产品落地手册',
+        summary: '把中介服务拆成具体 SKU、价格、交付动作和启动验证方案。',
+        href: '/home-case-reports/real-estate/product-handbook.html',
+      },
+      {
+        stage: '04 营销方案',
+        title: '合租侠内容营销方案',
+        summary: '围绕信任建立、私域转化和本地服务传播，规划营销打法。',
+        href: '/home-case-reports/real-estate/marketing-plan.html',
+      },
+      {
+        stage: '05 内容体系',
+        title: '合租侠内容营销体系',
+        summary: '输出可连续发布的故事库、发布节奏和平台内容分配。',
+        href: '/home-case-reports/real-estate/content-system.html',
+      },
+    ],
   },
   {
     id: 'restaurant',
@@ -156,6 +220,39 @@ const HOME_CASES: HomeCase[] = [
     body: '从单品记忆点、门店视觉和首发活动，拆出可复制的小餐饮起盘模型。',
     tag: '线下门店',
     image: '/home-cases/case-restaurant.jpg',
+    brandName: '锅气',
+    reports: [
+      {
+        stage: '01 市场调研',
+        title: '麻辣香锅工作餐赛道调研',
+        summary: '判断麻辣香锅存量竞争下的细分机会，明确"快香锅"的市场入口。',
+        href: '/home-case-reports/restaurant/market-research.html',
+      },
+      {
+        stage: '02 商业方案',
+        title: '锅气商业模式计划书',
+        summary: '沉淀品牌定位、盈利模型、定价策略和可落地的商业闭环。',
+        href: '/home-case-reports/restaurant/business-plan.html',
+      },
+      {
+        stage: '03 产品落地',
+        title: '锅气产品落地手册',
+        summary: '把餐饮服务拆成具体 SKU、定价、成本核算和启动验证方案。',
+        href: '/home-case-reports/restaurant/product-handbook.html',
+      },
+      {
+        stage: '04 营销方案',
+        title: '锅气内容营销方案',
+        summary: '围绕 5A 漏斗、故事矩阵和平台传播，规划内容营销打法。',
+        href: '/home-case-reports/restaurant/marketing-plan.html',
+      },
+      {
+        stage: '05 内容体系',
+        title: '锅气内容营销体系',
+        summary: '输出 32 条可连续发布的故事库、8 周发布节奏和五媒介分配。',
+        href: '/home-case-reports/restaurant/content-system.html',
+      },
+    ],
   },
   {
     id: 'fashion',
@@ -164,13 +261,23 @@ const HOME_CASES: HomeCase[] = [
     body: '明确人群风格、价格带和首批 SKU，形成适合内容平台的新品叙事。',
     tag: '消费品牌',
     image: '/home-cases/case-fashion.jpg',
+    brandName: '简序',
+    reports: [
+      { stage: '01 市场调研', title: '设计师品牌服装赛道调研', summary: '判断"高性价比极简通勤装"的市场空白，明确内容电商驱动的机会。', href: '/home-case-reports/fashion/market-research.html' },
+      { stage: '02 商业方案', title: '简序商业模式计划书', summary: '沉淀品牌定位、定价策略和内容驱动的商业闭环。', href: '/home-case-reports/fashion/business-plan.html' },
+      { stage: '03 产品落地', title: '简序产品落地手册', summary: '拆出 4 个 SKU、成本核算和 4 周启动验证方案。', href: '/home-case-reports/fashion/product-handbook.html' },
+      { stage: '04 营销方案', title: '简序内容营销方案', summary: '围绕 5A 漏斗和故事矩阵，规划小红书驱动的营销打法。', href: '/home-case-reports/fashion/marketing-plan.html' },
+      { stage: '05 内容体系', title: '简序内容营销体系', summary: '输出 32 条可连续发布的故事库和 8 周发布节奏。', href: '/home-case-reports/fashion/content-system.html' },
+    ],
   },
 ];
 
 type HomeExperienceProps = {
   activeDirection: Direction;
   quickSkills: string[];
+  skillItems: SkillLibraryItem[];
   selectedSkill: SkillLibraryItem | null;
+  onSkillDetailOpen: (skill: SkillLibraryItem) => void;
   onSelectedSkillRemove: () => void;
   homeTextareaRef: React.RefObject<HTMLTextAreaElement | null>;
   inputText: string;
@@ -187,7 +294,9 @@ type HomeExperienceProps = {
 export function HomeExperience({
   activeDirection,
   quickSkills,
+  skillItems,
   selectedSkill,
+  onSkillDetailOpen,
   onSelectedSkillRemove,
   homeTextareaRef,
   inputText,
@@ -202,13 +311,22 @@ export function HomeExperience({
 }: HomeExperienceProps) {
   const scrollRootRef = useRef<HTMLDivElement>(null);
   const skillStageRef = useRef<HTMLDivElement>(null);
-  const [activeSkillId, setActiveSkillId] = useState<string | null>('brand-positioning');
+  const [activeSkillId, setActiveSkillId] = useState<string | null>(null);
   const [casePanelOpen, setCasePanelOpen] = useState(false);
-  const activeSkill = HOME_SKILL_CARDS.find((card) => card.id === activeSkillId) || null;
+  const [activeCaseId, setActiveCaseId] = useState<string | null>(null);
+  const skillCards = useMemo(() => skillItems.map(buildHomeSkillCard), [skillItems]);
+  const activeSkill = skillCards.find((card) => card.id === activeSkillId) || null;
+  const activeCase = HOME_CASES.find((item) => item.id === activeCaseId) || null;
 
   useEffect(() => {
     scrollRootRef.current?.scrollTo({ top: 0 });
   }, []);
+
+  useEffect(() => {
+    if (activeSkillId && !skillCards.some((card) => card.id === activeSkillId)) {
+      setActiveSkillId(null);
+    }
+  }, [activeSkillId, skillCards]);
 
   const scrollToDashboard = () => {
     scrollRootRef.current?.scrollTo({
@@ -223,6 +341,25 @@ export function HomeExperience({
       behavior: 'smooth',
     });
   };
+
+  const closeCasePanel = () => {
+    setCasePanelOpen(false);
+    setActiveCaseId(null);
+  };
+
+  const openCase = (item: HomeCase) => {
+    if (!item.reports?.length) {
+      showToast({ message: `${item.title}案例资料建设中`, variant: 'info' });
+      return;
+    }
+    setActiveCaseId(item.id);
+  };
+
+  const casePanelClassName = [
+    'home-case-panel',
+    casePanelOpen ? 'open' : '',
+    activeCase ? 'detail-open' : '',
+  ].filter(Boolean).join(' ');
 
   return (
     <div className="home-experience" ref={scrollRootRef}>
@@ -262,6 +399,10 @@ export function HomeExperience({
                 <GalleryHorizontalEnd size={16} />
                 <span>项目案例</span>
               </button>
+              <button className="home-help-button" type="button" aria-label="帮助" title="帮助">
+                <HelpCircle size={16} />
+                <span>帮助</span>
+              </button>
             </nav>
           </header>
 
@@ -286,25 +427,40 @@ export function HomeExperience({
               <ChevronLeft size={24} />
             </button>
             <div className="home-skill-stage" ref={skillStageRef}>
-              {HOME_SKILL_CARDS.map((card) => (
-                <button
+              {skillCards.map((card) => (
+                <article
                   key={card.id}
-                  className={`home-skill-card ${card.toneClass} ${card.rotationClass}${card.id === activeSkillId ? ' active' : ''}`}
-                  onClick={() => setActiveSkillId(card.id)}
-                  type="button"
-                  aria-pressed={card.id === activeSkillId}
+                  className={`home-skill-card ${card.toneClass} ${card.rotationClass}${card.titleLines.length > 1 ? ' title-multiline' : ''}${card.id === activeSkillId ? ' active' : ''}`}
+                  style={{ '--home-skill-title-size': card.titleSize } as CSSProperties}
                 >
-                  <span className="home-skill-chip" aria-hidden="true">
-                    <i />
-                    <i />
-                    <i />
-                    <i />
-                  </span>
-                  <span className="home-skill-label">{card.label}</span>
-                  <span className="home-skill-index">{card.index}</span>
-                  <strong>{card.title}</strong>
-                  <small>{card.description}</small>
-                </button>
+                  <button
+                    className="home-skill-select"
+                    onClick={() => setActiveSkillId(card.id)}
+                    type="button"
+                    aria-pressed={card.id === activeSkillId}
+                    aria-label={`选择${card.title}`}
+                  >
+                    <span className="home-skill-label">{card.label}</span>
+                    <span className="home-skill-index">{card.index}</span>
+                    <strong>
+                      {card.titleLines.map((line) => (
+                        <span key={line}>{line}</span>
+                      ))}
+                    </strong>
+                    <small>
+                      <span>{card.description}</span>
+                    </small>
+                  </button>
+                  <button
+                    className="home-skill-help"
+                    onClick={() => onSkillDetailOpen(card.skill)}
+                    type="button"
+                    aria-label={`查看${card.title}详情`}
+                    title="查看技能详情"
+                  >
+                    <HelpCircle size={15} />
+                  </button>
+                </article>
               ))}
             </div>
             <button
@@ -344,33 +500,76 @@ export function HomeExperience({
           </footer>
         </div>
 
-        <section className={casePanelOpen ? 'home-case-panel open' : 'home-case-panel'} aria-label="项目案例">
+        <section className={casePanelClassName} aria-label="项目案例">
           <div className="home-case-board">
             <header className="home-case-head">
-              <div>
-                <span>PROJECT CASES</span>
-                <h2>四个创业案例</h2>
-              </div>
-              <button className="home-case-close" onClick={() => setCasePanelOpen(false)} type="button" aria-label="关闭项目案例" title="关闭">
+              {activeCase ? (
+                <div className="home-case-detail-title">
+                  <button className="home-case-back" onClick={() => setActiveCaseId(null)} type="button">
+                    <ChevronLeft size={16} />
+                    <span>返回案例</span>
+                  </button>
+                  <span>CASE LIBRARY</span>
+                  <h2>{activeCase.title}案例资料</h2>
+                  <p>{activeCase.body}</p>
+                </div>
+              ) : (
+                <div>
+                  <span>PROJECT CASES</span>
+                  <h2>四个创业案例</h2>
+                </div>
+              )}
+              <button className="home-case-close" onClick={closeCasePanel} type="button" aria-label="关闭项目案例" title="关闭">
                 <X size={19} />
               </button>
             </header>
-            <div className="home-case-grid">
-              {HOME_CASES.map((item) => (
-                <article
-                  key={item.id}
-                  className="home-case-card"
-                  style={{ '--home-case-image': `url(${item.image})` } as CSSProperties}
-                >
-                  <div>
-                    <small>{item.index}</small>
-                    <strong>{item.title}</strong>
-                    <p>{item.body}</p>
-                  </div>
-                  <span>{item.tag}</span>
-                </article>
-              ))}
-            </div>
+            {activeCase ? (
+              <div className="home-case-detail">
+                <div className="home-case-detail-hero" style={{ '--home-case-image': `url(${activeCase.image})` } as CSSProperties}>
+                  <small>{activeCase.index}</small>
+                  <strong>{activeCase.brandName || activeCase.title}</strong>
+                  <span>{activeCase.tag}</span>
+                </div>
+                <div className="home-case-report-grid">
+                  {activeCase.reports?.map((report) => (
+                    <article className="home-case-report-card" key={report.href}>
+                      <div className="home-case-report-icon">
+                        <FileText size={18} />
+                      </div>
+                      <div>
+                        <small>{report.stage}</small>
+                        <strong>{report.title}</strong>
+                        <p>{report.summary}</p>
+                      </div>
+                      <a href={report.href} target="_blank" rel="noreferrer">
+                        <span>查看完整报告</span>
+                        <ArrowUpRight size={14} />
+                      </a>
+                    </article>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="home-case-grid">
+                {HOME_CASES.map((item) => (
+                  <button
+                    key={item.id}
+                    className={`home-case-card${item.reports?.length ? ' is-ready' : ''}`}
+                    style={{ '--home-case-image': `url(${item.image})` } as CSSProperties}
+                    onClick={() => openCase(item)}
+                    type="button"
+                    aria-label={`打开${item.title}项目案例`}
+                  >
+                    <div>
+                      <small>{item.index}</small>
+                      <strong>{item.title}</strong>
+                      <p>{item.body}</p>
+                    </div>
+                    <span>{item.reports?.length ? '查看案例' : item.tag}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </section>

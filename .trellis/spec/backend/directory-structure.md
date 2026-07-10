@@ -352,7 +352,12 @@ Use the local capability boundaries before adding new helpers:
 #### 3. Contracts
 
 - Width is semantic plus content-length based, not a fixed equal split for every column.
-- Right alignment is semantic only: numeric/year/market-size/source-short columns may align right; the final column is not right-aligned by default.
+- Right alignment is semantic only: numeric, market-size, amount, and percentage columns may align right; the final column is not right-aligned by default.
+- Table headers follow the same semantic alignment as their body column: left for descriptive/year/source fields, right for numeric/percentage fields, and centered only for compact categorical/comparison columns.
+- Short categorical body columns such as `类目`, `维度`, `项目`, and `方式` may center-align when their values are compact; long descriptive and source/label fields stay left-aligned.
+- Two-column compact comparison tables such as `竞争者 / 市占率(估)` center-align both body columns so short values do not drift to opposite table edges.
+- First-column labels, year columns (`年份`/`年度`), and source/label fields such as `收入来源` and `数据来源` stay left-aligned even when their content is short.
+- 2/3/4-column tables should fill the report content width; do not shrink short tables to partial-width blocks.
 - Header/body row normalization must preserve data by padding short rows and merging overflow cells into the last column.
 - Story-output tables with script/copy/private-domain/platform columns render as accordion cards so long generated copy remains readable.
 
@@ -366,8 +371,12 @@ Use the local capability boundaries before adding new helpers:
 
 #### 5. Good/Base/Bad Cases
 
-- Good: exported market tables match frontend live-chat proportions for `市场规模`, `核心特征`, and `机会点`.
+- Good: exported market tables match frontend live-chat proportions for `市场规模`, `核心特征`, and `机会点`, while keeping `年份`/`数据来源` left-aligned.
 - Base: older simple tables still render with standard `<thead>`/`<tbody>` and readable cells.
+- Base: exported table headers such as `年份` and `预测增速` sit above their own data because they use the same left/right alignment as body cells.
+- Base: compact table headers and body cells can center-align together.
+- Base: a two-column `竞争者/市占率(估)` table keeps competitor names and percentages centered under their headers rather than pinned to the left and right edges.
+- Base: a two-column `方式/节奏` table spans the full report content width.
 - Bad: updating only frontend table weights while backend report export keeps equal-width or last-column-right behavior.
 
 #### 6. Tests Required
