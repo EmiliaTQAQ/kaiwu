@@ -1,5 +1,5 @@
 import { type CSSProperties, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowUpRight, Box, ChevronDown, ChevronLeft, ChevronRight, FileText, GalleryHorizontalEnd, HelpCircle, X } from 'lucide-react';
+import { ArrowUpRight, ChevronDown, ChevronLeft, ChevronRight, FileText, GalleryHorizontalEnd, HelpCircle, X } from 'lucide-react';
 import type { Direction, ShowToast, SkillLibraryItem } from '../../types';
 import { ChatInput, type StartupSkillSelection } from './ChatInput';
 import '../../styles/home/home-experience.css';
@@ -59,6 +59,12 @@ const HOME_CARD_FALLBACK_TONES = [
 ] as const;
 
 const HOME_CARD_TITLE_LINES: Record<string, string[]> = {
+  '用户痛点访谈模拟器': ['用户痛点', '访谈模拟器'],
+  '差异化定位设计师': ['差异化', '定位设计师'],
+  '第一单成交设计师': ['第一单', '成交设计师'],
+  'Slogan 打磨师': ['Slogan', '打磨师'],
+  '小红书运营总监': ['小红书', '运营总监'],
+  '每日任务拆解官': ['每日任务', '拆解官'],
   '发售人群针对坐标轴理论': ['发售人群针对', '坐标轴理论'],
   '最小MVP从0-1': ['最小 MVP', '从 0-1'],
   '网页采集助手': ['网页采集助手'],
@@ -288,6 +294,7 @@ type HomeExperienceProps = {
   isLoading: boolean;
   modelIndex: number;
   setModelIndex: (value: number) => void;
+  onReferenceHistoryClick?: () => void;
   showToast: ShowToast;
 };
 
@@ -307,6 +314,7 @@ export function HomeExperience({
   isLoading,
   modelIndex,
   setModelIndex,
+  onReferenceHistoryClick,
   showToast,
 }: HomeExperienceProps) {
   const scrollRootRef = useRef<HTMLDivElement>(null);
@@ -365,7 +373,7 @@ export function HomeExperience({
     <div className="home-experience" ref={scrollRootRef}>
       <section className="home-intro-page" aria-label="开物首页开场">
         <header className="home-intro-topbar">
-          <span>开物 KAIWU</span>
+          <img className="home-intro-logo" src="/kaiwu-intro-logo.png" alt="开物 Kaiwu" />
           <span>JUST DO IT</span>
         </header>
         <div className="home-intro-main">
@@ -388,12 +396,6 @@ export function HomeExperience({
       <section className="home-dashboard-page" aria-label="开物首页主工作台">
         <div className="home-dashboard-layout">
           <header className="home-dashboard-topbar">
-            <div className="home-dashboard-brand" aria-label="开物">
-              <span className="home-dashboard-brand-icon">
-                <Box size={18} />
-              </span>
-              <strong>开物</strong>
-            </div>
             <nav className="home-dashboard-nav" aria-label="首页快捷操作">
               <button className="home-case-open" onClick={() => setCasePanelOpen(true)} type="button">
                 <GalleryHorizontalEnd size={16} />
@@ -491,6 +493,7 @@ export function HomeExperience({
             isLoading={isLoading}
             modelIndex={modelIndex}
             setModelIndex={setModelIndex}
+            onReferenceHistoryClick={onReferenceHistoryClick}
             showToast={showToast}
           />
 

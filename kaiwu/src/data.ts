@@ -22,10 +22,10 @@
  * modelOptions —— 内置 AI 模型列表（开物深思/开物极速/开物研究）
  *
  * ## 4. 技能市场
- * skillMarketItems —— 12 个可安装技能的完整信息
+ * skillMarketItems —— 可安装技能的完整信息
  * installedSkills —— 已安装技能名称列表
  * skillTemplates —— 技能模板配置
- * skillCategories —— 技能分类（全部/市场调研/商业方案/品牌建设/产品设计/营销方案）
+ * skillCategories —— 技能分类（全部/市场调研/商业方案/品牌建设/产品设计/营销方案/执行路线）
  *
  * ## 5. 项目库
  * projectFolders —— 7 个项目文件夹配置
@@ -97,6 +97,48 @@ export const heroText = heroLines.join('\n');
 export const settingsSections = ['账户管理', '系统设置', '智能体设置', '记忆', '模型', '软件配置', '帮助与反馈'] as const;
 
 export const skillMarketItems = [
+  {
+    name: '用户痛点访谈模拟器',
+    desc: '模拟真实用户访谈，挖出痛点、动机、阻力和验证问题',
+    category: '市场调研',
+    tone: 'blue',
+    doc: '在真实访谈前，模拟目标用户会怎么说，生成访谈问题、潜在回答、痛点层级和下一步真实访谈要验证的问题。适用于需求调研、用户画像、产品验证和市场切口判断。',
+  },
+  {
+    name: '差异化定位设计师',
+    desc: '找到和别人不一样、用户能听懂的定位表达',
+    category: '品牌建设',
+    tone: 'indigo',
+    doc: '围绕人群、场景、痛点、价格带、竞品和团队资源，比较多个定位方向，输出一句话定位、竞品对比表达和用户听得懂的版本。',
+  },
+  {
+    name: '第一单成交设计师',
+    desc: '设计第一个可卖产品、价格、成交路径和验证指标',
+    category: '商业方案',
+    tone: 'purple',
+    doc: '把商业模式拉回第一笔钱：明确第一批付费客户、第一个可卖产品或服务、首单价格、成交路径、成交话术和 7-30 天验证指标。',
+  },
+  {
+    name: 'Slogan 打磨师',
+    desc: '打磨一句能传播、能被记住的品牌口号',
+    category: '品牌建设',
+    tone: 'rose',
+    doc: '把品牌定位、用户利益、情绪记忆和传播节奏压缩成一句用户能记住、能转述的 slogan，并按清晰度、记忆度、差异化、传播性和可信度筛选。',
+  },
+  {
+    name: '小红书运营总监',
+    desc: '设计小红书定位、关键词、选题、笔记和转化路径',
+    category: '营销方案',
+    tone: 'green',
+    doc: '围绕小红书搜索、种草、收藏、评论、私信和成交，输出账号定位、关键词池、内容栏目、笔记选题、正文结构、CTA、转化路径和发布节奏。',
+  },
+  {
+    name: '每日任务拆解官',
+    desc: '把创业大计划拆成今天能完成的 3 件关键任务',
+    category: '执行路线',
+    tone: 'amber',
+    doc: '把创业计划、报告或当前卡点拆成今日主目标、3 个具体任务、步骤、预计时间、产出物、完成标准、不要做清单和晚间复盘问题。',
+  },
   { name: '心理登月', desc: '从用户心理层面寻找替代方案，用体验创新解决同质化竞争', category: '品牌建设', tone: 'indigo', doc: '当产品陷入同质化竞争或遇到技术瓶颈时，从心理层面重新定义问题，用体验替代技术方案，以更低成本达到更好效果。适用于差异化策略、用户体验重构、产品定位调整。' },
   { name: '发售人群针对坐标轴理论', desc: '人群分层、内容配比、精准投放与发售策略', category: '营销方案', tone: 'indigo', doc: '基于人群分层和坐标轴模型，规划精准的GTM策略，分配内容预算，设计分阶段发售方案。适用于新品上市、人群定位、投放策略制定。' },
   { name: '最小MVP从0-1', desc: '客户购买心智路径五阶段拆解，内容策略与转化优化', category: '产品设计', tone: 'indigo', doc: '拆解客户从认知到复购的五阶段心智路径，诊断转化漏斗问题，设计分阶段内容策略。适用于内容营销规划、客户旅程设计、转化率优化。' },
@@ -123,7 +165,7 @@ export const skillTemplates = [
   { name: '代码助手', desc: '适合生成、审查和调试', category: '产品设计', tone: 'indigo' },
 ];
 
-export const skillCategories = ['全部', '市场调研', '商业方案', '品牌建设', '产品设计', '营销方案'] as const;
+export const skillCategories = ['全部', '市场调研', '商业方案', '品牌建设', '产品设计', '营销方案', '执行路线'] as const;
 
 export const skillCategoryAliases: Record<string, Exclude<(typeof skillCategories)[number], '全部'>> = {
   方法论: '市场调研',

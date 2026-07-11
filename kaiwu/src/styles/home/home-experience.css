@@ -56,6 +56,13 @@
   font-weight: 800;
 }
 
+.home-intro-logo {
+  width: 108px;
+  height: 23px;
+  object-fit: contain;
+  display: block;
+}
+
 .home-intro-main {
   position: relative;
   z-index: 1;
@@ -145,27 +152,7 @@
 .home-dashboard-topbar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-}
-
-.home-dashboard-brand {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  color: #111827;
-  font-size: 15px;
-}
-
-.home-dashboard-brand-icon {
-  width: 32px;
-  height: 32px;
-  display: grid;
-  place-items: center;
-  border-radius: 10px;
-  color: #0f172a;
-  background: rgba(255, 255, 255, 0.82);
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+  justify-content: flex-end;
 }
 
 .home-dashboard-nav {
@@ -1144,7 +1131,6 @@
     font-size: 13px;
   }
 
-  .home-dashboard-brand strong,
   .home-case-open span,
   .home-help-button span {
     display: none;
