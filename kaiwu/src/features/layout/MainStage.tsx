@@ -182,6 +182,16 @@ export function MainStage(props: MainStageProps) {
     setSkillModalData?.(skill);
     setSkillModal?.('detail');
   };
+  const startHomeSkillConversation = (skill: SkillLibraryItem) => {
+    setSelectedComposerSkill?.(skill);
+    resetConversation?.({ activePage: 'home', open: true, clearLoading: false });
+    followupNodeRef.current = 'node6';
+    setActivePage('home');
+    window.setTimeout(() => {
+      followupNodeRef.current = 'node6';
+      convTextareaRef.current?.focus();
+    }, 0);
+  };
   const projectFileKey = (file: ProjectFileLike) => `${file.folder}/${file.name}`;
   const visibleProjectFileKey = visibleRealProjectFiles.map((file: ProjectFileLike) => projectFileKey(file)).join('|');
   const selectedFolderDetailItemCount = isImageLibraryFolder ? selectedProjectImageNames.length : selectedProjectFileKeys.length;
@@ -405,6 +415,13 @@ export function MainStage(props: MainStageProps) {
                   setOpenPicker={setOpenPicker}
                   setRatioOpen={setRatioOpen}
                   setSelectedFolderIndex={setSelectedFolderIndex}
+                  selectedSkill={selectedComposerSkill}
+                  onSelectedSkillRemove={() => {
+                    setSelectedComposerSkill?.(null);
+                    if (followupNodeRef.current === 'node6') {
+                      followupNodeRef.current = null;
+                    }
+                  }}
                   setSuggestedQuestions={setSuggestedQuestions}
                   stopGeneration={stopGeneration}
                   suggestedQuestions={suggestedQuestions}
@@ -812,6 +829,7 @@ export function MainStage(props: MainStageProps) {
                   skillItems={skillItems}
                   selectedSkill={selectedComposerSkill}
                   onSkillDetailOpen={openHomeSkillDetail}
+                  onStartupSkillSelect={startHomeSkillConversation}
                   onSelectedSkillRemove={() => setSelectedComposerSkill?.(null)}
                   homeTextareaRef={homeTextareaRef}
                   inputText={inputText}

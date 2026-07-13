@@ -276,6 +276,23 @@ const HOME_CASES: HomeCase[] = [
       { stage: '05 内容体系', title: '简序内容营销体系', summary: '输出 32 条可连续发布的故事库和 8 周发布节奏。', href: '/home-case-reports/fashion/content-system.html' },
     ],
   },
+  {
+    id: 'qianban',
+    index: 'CASE 05',
+    title: '牵伴 AI',
+    body: '用 AI 把家庭照片、长辈回忆和代际沟通编织成可互动、可沉淀的亲情故事。',
+    tag: '银发陪伴',
+    image: '/home-cases/case-qianban.jpg',
+    brandName: '牵伴 AI',
+    reports: [
+      {
+        stage: '项目方案',
+        title: '牵伴 AI 家庭记忆项目方案',
+        summary: '围绕家庭记忆、长辈陪伴和 AI 生成故事，展示产品体验、用户价值与商业想象。',
+        href: '/home-case-reports/qianban/index.html',
+      },
+    ],
+  },
 ];
 
 type HomeExperienceProps = {
@@ -284,6 +301,7 @@ type HomeExperienceProps = {
   skillItems: SkillLibraryItem[];
   selectedSkill: SkillLibraryItem | null;
   onSkillDetailOpen: (skill: SkillLibraryItem) => void;
+  onStartupSkillSelect?: (skill: SkillLibraryItem) => void;
   onSelectedSkillRemove: () => void;
   homeTextareaRef: React.RefObject<HTMLTextAreaElement | null>;
   inputText: string;
@@ -304,6 +322,7 @@ export function HomeExperience({
   skillItems,
   selectedSkill,
   onSkillDetailOpen,
+  onStartupSkillSelect,
   onSelectedSkillRemove,
   homeTextareaRef,
   inputText,
@@ -348,6 +367,11 @@ export function HomeExperience({
       left: direction === 'previous' ? -360 : 360,
       behavior: 'smooth',
     });
+  };
+
+  const selectStartupSkill = (card: HomeSkillCard) => {
+    setActiveSkillId(card.id);
+    onStartupSkillSelect?.(card.skill);
   };
 
   const closeCasePanel = () => {
@@ -410,13 +434,36 @@ export function HomeExperience({
 
           <section className="home-hero-copy">
             <h2>
-              选择一张技能卡<br />
-              <span>启动你的创业计划</span>
+              在对话框说出你的想法<br />
+              <span>即刻开启创业之旅</span>
             </h2>
             <p>
-              像抽取一张任务卡一样开始：调研、定位、商业模式、品牌、产品、营销和执行路线，帮助你快速完成最小 MVP。
+              只需几轮沟通对话，您便可获得《深度调研报告》《品牌商业方案报告》
+              <br />
+              《产品落地执行手册》《系统化内容营销方案》《自媒体文案报告》，让项目全貌在您面前一览无余。
             </p>
           </section>
+
+          <ChatInput
+            activeDirection={activeDirection}
+            quickSkills={quickSkills}
+            selectedSkill={selectedSkill}
+            onSelectedSkillRemove={onSelectedSkillRemove}
+            startupSkill={activeSkill}
+            onStartupSkillRemove={() => setActiveSkillId(null)}
+            placeholder={activeSkill?.prompt}
+            homeTextareaRef={homeTextareaRef}
+            inputText={inputText}
+            setInputText={setInputText}
+            isComposingRef={isComposingRef}
+            handleSend={handleSend}
+            stopGeneration={stopGeneration}
+            isLoading={isLoading}
+            modelIndex={modelIndex}
+            setModelIndex={setModelIndex}
+            onReferenceHistoryClick={onReferenceHistoryClick}
+            showToast={showToast}
+          />
 
           <section className="home-skill-zone" aria-label="创业技能卡片">
             <button
@@ -437,7 +484,7 @@ export function HomeExperience({
                 >
                   <button
                     className="home-skill-select"
-                    onClick={() => setActiveSkillId(card.id)}
+                    onClick={() => selectStartupSkill(card)}
                     type="button"
                     aria-pressed={card.id === activeSkillId}
                     aria-label={`选择${card.title}`}
@@ -476,31 +523,9 @@ export function HomeExperience({
             </button>
           </section>
 
-          <ChatInput
-            activeDirection={activeDirection}
-            quickSkills={quickSkills}
-            selectedSkill={selectedSkill}
-            onSelectedSkillRemove={onSelectedSkillRemove}
-            startupSkill={activeSkill}
-            onStartupSkillRemove={() => setActiveSkillId(null)}
-            placeholder={activeSkill?.prompt}
-            homeTextareaRef={homeTextareaRef}
-            inputText={inputText}
-            setInputText={setInputText}
-            isComposingRef={isComposingRef}
-            handleSend={handleSend}
-            stopGeneration={stopGeneration}
-            isLoading={isLoading}
-            modelIndex={modelIndex}
-            setModelIndex={setModelIndex}
-            onReferenceHistoryClick={onReferenceHistoryClick}
-            showToast={showToast}
-          />
-
-          <footer className="home-dashboard-footer">
-            <span>{activeSkill ? `${activeSkill.title} · ${activeSkill.description}` : '选择一张技能卡开始创业计划'}</span>
-            <span>内容由 AI 生成，请核实完整性</span>
-          </footer>
+          <p className="home-skill-footnote">
+            在您后续创业的执行阶段，我们的技能库还会持续更新，在创业过程中的各个细节为您持续赋能。
+          </p>
         </div>
 
         <section className={casePanelClassName} aria-label="项目案例">
@@ -519,7 +544,7 @@ export function HomeExperience({
               ) : (
                 <div>
                   <span>PROJECT CASES</span>
-                  <h2>四个创业案例</h2>
+                  <h2>五个创业案例</h2>
                 </div>
               )}
               <button className="home-case-close" onClick={closeCasePanel} type="button" aria-label="关闭项目案例" title="关闭">

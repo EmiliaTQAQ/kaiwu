@@ -4,7 +4,7 @@ import { ArrowUp, Bookmark, Bot, Box, ChevronDown, ChevronLeft, Copy, Download, 
 
 import { imageModelOptions, imageRatioOptions, imageResolutionOptions, modelOptions, projectFolders } from '../../data';
 import { API_BASE_URL, apiJson } from '../../api/client';
-import type { Direction, ImageModelId, ImageRatio, ImageResolution, LibraryModalType, PickerType, ShowToast } from '../../types';
+import type { Direction, ImageModelId, ImageRatio, ImageResolution, LibraryModalType, PickerType, ShowToast, SkillLibraryItem } from '../../types';
 import { renderMarkdown } from '../../utils';
 import type { AgentMessage } from '../../hooks/agentEventReducer';
 import type { SendMessageOptions } from '../../hooks/useConversationTask';
@@ -86,6 +86,8 @@ type ConversationPanelProps = {
   setOpenPicker: Dispatch<SetStateAction<PickerType>>;
   setRatioOpen: Dispatch<SetStateAction<boolean>>;
   setSelectedFolderIndex: Dispatch<SetStateAction<number>>;
+  selectedSkill?: SkillLibraryItem | null;
+  onSelectedSkillRemove?: () => void;
   setSuggestedQuestions: (items: string[]) => void;
   stopGeneration: () => void;
   suggestedQuestions: string[];
@@ -209,6 +211,8 @@ export function ConversationPanel({
   setOpenPicker,
   setRatioOpen,
   setSelectedFolderIndex,
+  selectedSkill,
+  onSelectedSkillRemove,
   setSuggestedQuestions,
   stopGeneration,
   suggestedQuestions,
@@ -313,6 +317,17 @@ export function ConversationPanel({
   };
 
   const suggestedQuestionFollowupNode = (question: string) => (NEXT_NODE_PROMPTS.has(question) ? null : activeNodeId);
+  const composerPlaceholder = selectedSkill
+    ? `你正在使用「${selectedSkill.name}」。请直接说出你的项目背景、目标用户和当前卡点，我会按这个技能帮你输出结果。`
+    : isImageMode
+      ? '上传参考图、输入文字或 @ 主体，描述你想生成的图片。'
+      : '继续追问，或让开物把结果保存为阶段产物...';
+  const removeSelectedSkill = () => {
+    onSelectedSkillRemove?.();
+    if (followupNodeRef.current === 'node6') {
+      followupNodeRef.current = null;
+    }
+  };
 
   return (
     <section className="doubao-conversation">
@@ -625,6 +640,16 @@ export function ConversationPanel({
 
       <div className={isImageMode ? 'doubao-composer image-generation-composer' : 'doubao-composer'}>
         <div className={isImageMode ? 'doubao-composer-inner image-generation-inner' : 'doubao-composer-inner'}>
+          {!isImageMode && selectedSkill && (
+            <div className="conversation-skill-context">
+              <span>当前技能</span>
+              <strong>{selectedSkill.name}</strong>
+              <em>{selectedSkill.description}</em>
+              <button onClick={removeSelectedSkill} type="button" aria-label="移除当前技能" title="移除当前技能">
+                <X size={13} />
+              </button>
+            </div>
+          )}
           {isImageMode && (
             <div className="image-reference-shell">
               <button className="image-reference-button" onClick={openReferenceImagePicker} type="button" title="上传参考图">
@@ -650,7 +675,7 @@ export function ConversationPanel({
           <textarea
             ref={convTextareaRef}
             value={inputText}
-            placeholder={isImageMode ? '上传参考图、输入文字或 @ 主体，描述你想生成的图片。' : '继续追问，或让开物把结果保存为阶段产物...'}
+            placeholder={composerPlaceholder}
             onChange={(event) => setInputText(event.target.value)}
             onCompositionStart={() => {
               isComposingRef.current = true;

@@ -82,6 +82,7 @@ class AgentRuntime:
         followup_node = payload.get("followup_node")
         selected_model = payload.get("model")
         conversation_id = payload.get("conversation_id")
+        skill_context = payload.get("skill_context") if isinstance(payload.get("skill_context"), dict) else None
 
         self.event_store.update_task(task_id, status=ROUTING)
 
@@ -214,10 +215,11 @@ class AgentRuntime:
 
         ai_response = [None]
         llm_error = [None]
+        llm_message = self._build_node6_message(message, skill_context) if node_id == "node6" else message
 
         def run_llm():
             try:
-                ai_response[0] = generate_ai_response(node_id, message, history, selected_model, bool(followup_node))
+                ai_response[0] = generate_ai_response(node_id, llm_message, history, selected_model, bool(followup_node) and node_id != "node6")
             except Exception as exc:
                 llm_error[0] = str(exc)[:300]
 
@@ -351,6 +353,24 @@ class AgentRuntime:
                 return
             self.emit(task_id, "content", {"content": text[i : i + chunk_size]})
             time.sleep(0.006)
+
+    @staticmethod
+    def _build_node6_message(message: str, skill_context: dict[str, Any] | None) -> str:
+        if not skill_context:
+            return message
+        name = str(skill_context.get("name") or "").strip()
+        category = str(skill_context.get("category") or "").strip()
+        description = str(skill_context.get("description") or "").strip()
+        doc = str(skill_context.get("doc") or skill_context.get("full_content") or "").strip()
+        return (
+            "[当前技能卡]\n"
+            f"- 名称：{name or '未命名技能'}\n"
+            f"- 分类：{category or '未分类'}\n"
+            f"- 简介：{description or '无'}\n"
+            f"- 详情：{doc[:3000] or '无'}\n\n"
+            "---\n"
+            f"用户问题：{message}"
+        )
 
     def _execute_image_generation_task(
         self,

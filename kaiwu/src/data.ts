@@ -122,14 +122,14 @@ export const skillMarketItems = [
     name: 'Slogan 打磨师',
     desc: '打磨一句能传播、能被记住的品牌口号',
     category: '品牌建设',
-    tone: 'rose',
+    tone: 'green',
     doc: '把品牌定位、用户利益、情绪记忆和传播节奏压缩成一句用户能记住、能转述的 slogan，并按清晰度、记忆度、差异化、传播性和可信度筛选。',
   },
   {
     name: '小红书运营总监',
     desc: '设计小红书定位、关键词、选题、笔记和转化路径',
     category: '营销方案',
-    tone: 'green',
+    tone: 'rose',
     doc: '围绕小红书搜索、种草、收藏、评论、私信和成交，输出账号定位、关键词池、内容栏目、笔记选题、正文结构、CTA、转化路径和发布节奏。',
   },
   {

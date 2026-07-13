@@ -266,7 +266,7 @@ def generate_ai_response(node_id: str, user_input: str, history: list = None, mo
             # 其他节点不设 model → call_llm 用 DEEPSEEK_MODEL (deepseek-chat)
 
         # token 预算：深度分析节点需要更大空间，node0 诊断需要容纳 §1-§7 输出
-        max_tok_map = {"node1": 40000, "node2": 25000, "node3": 17000, "node4": 40000, "node5": 40000, "node0": 16000}
+        max_tok_map = {"node1": 40000, "node2": 25000, "node3": 17000, "node4": 40000, "node5": 40000, "node0": 16000, "node6": 12000}
         max_tok = max_tok_map.get(node_id, 8192)
 
         # Node0 第6轮确认：用户信息确认完毕，需要输出完整 dialogue_brief，提高 token 上限
