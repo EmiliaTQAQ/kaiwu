@@ -143,7 +143,9 @@ export function useConversationTask(options: UseConversationTaskOptions) {
   const refreshHistory = useCallback(() => {
     apiJson<ConvHistory[]>('/api/conversations')
       .then((data) => options.setConvHistory(data))
-      .catch(() => {});
+      .catch((error) => {
+        options.showToast?.({ message: `历史对话刷新失败：${getErrorMessage(error)}`, variant: 'error' });
+      });
   }, [options]);
 
   const refreshProjectImages = useCallback(() => {

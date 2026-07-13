@@ -136,8 +136,11 @@ export function useConversation(options: UseConversationOptions) {
   const refreshConversationHistory = useCallback(() => {
     apiJson<ConvHistory[]>('/api/conversations')
       .then((data) => options.setConvHistory(data))
-      .catch(() => {});
-  }, [options.setConvHistory]);
+      .catch((error) => {
+        const message = error instanceof Error ? error.message : '历史对话加载失败';
+        options.showToast?.({ message: `历史对话加载失败：${message}`, variant: 'error' });
+      });
+  }, [options.setConvHistory, options.showToast]);
 
   useEffect(() => {
     refreshConversationHistory();

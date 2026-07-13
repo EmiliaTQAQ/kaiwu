@@ -245,13 +245,13 @@ npm run dev
 http://localhost:5173
 ```
 
-前端默认请求：
+前端默认使用同源 API 路径：
 
 ```text
-http://localhost:5001
+/api
 ```
 
-如需修改后端地址：
+本地开发时 `VITE_API_BASE_URL` 默认为空，Vite 会把 `/api`、`/project-files`、`/project-images` 和 `/project-image-previews` 代理到 `http://localhost:5001`。如需绕过 Vite 代理并直接请求本地后端：
 
 ```powershell
 $env:VITE_API_BASE_URL="http://localhost:5001"
@@ -329,7 +329,9 @@ python -m compileall server
 
 | 变量 | 默认值 | 用途 |
 | --- | --- | --- |
-| `VITE_API_BASE_URL` | `http://localhost:5001` | 前端请求后端 API 的基础地址 |
+| `VITE_API_BASE_URL` | 空 | 前端请求后端 API 的基础地址；为空时使用同源 `/api` |
+
+上线到 HTTPS 域名时不要把 `VITE_API_BASE_URL` 设置为 `http://<公网IP>:5001`，浏览器会按 Mixed Content 拦截。推荐生产部署保持为空，并在 Web 服务器把同源路径反代到后端；只有后端/API 网关本身也有 HTTPS 证书时，才设置为 `https://...`。
 
 ## 核心 API
 
@@ -542,6 +544,8 @@ $OutputEncoding = [System.Text.Encoding]::UTF8
 
 当前项目更偏本地开发与原型验证。部署到生产环境前建议补齐：
 
+- HTTPS 站点必须避免浏览器访问 `http://<公网IP>:5001`。以 `https://www.hzyaoshi.com` 为例，前端构建时保持 `VITE_API_BASE_URL=`，再由 Nginx/网关把 `/api`、`/project-files`、`/project-images`、`/project-image-previews` 反代到 `http://127.0.0.1:5001`。
+- 后端如需生成绝对文件/图片 URL，`PUBLIC_BASE_URL` 应设为 `https://www.hzyaoshi.com`；同源部署也可以留空，让后端返回相对路径。
 - 关闭 `allow_origins=["*"]`，改为明确的前端域名。
 - 将数据库配置改为环境变量注入。
 - 为任务 API 增加鉴权、限流和审计。

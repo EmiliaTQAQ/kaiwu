@@ -10,6 +10,7 @@ from server.agent.task_service import task_service
 from server.api.routes_conv import register_conv_routes
 from server.api.routes_events import register_event_routes
 from server.api.routes_files import register_file_routes
+from server.api.routes_health import register_health_routes
 from server.api.routes_skills import register_skills_routes
 from server.api.routes_tasks import register_task_routes
 from server.config import PUBLIC_BASE_URL
@@ -29,6 +30,7 @@ register_file_routes(app)
 register_conv_routes(app)
 register_task_routes(app)
 register_event_routes(app)
+register_health_routes(app)
 
 
 @app.get("/api/health")
